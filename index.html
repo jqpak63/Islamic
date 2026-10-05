@@ -1,1 +1,255 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Islamic Portal & Quran App</title>
 
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & Babel CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Google Fonts for Urdu & Arabic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0F4D2A',
+            primaryDark: '#0A331C',
+            accent: '#C9A86C',
+            accentLight: '#E8D5B5',
+            bgLight: '#FDF8F0',
+          },
+          fontFamily: {
+            arabic: ['Amiri', 'serif'],
+            urdu: ['Noto Nastaliq Urdu', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FDF8F0;
+      color: #1a2e1a;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+    }
+    .font-arabic { font-family: 'Amiri', serif; }
+    .font-urdu { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDF8F0; }
+    ::-webkit-scrollbar-thumb { background: #C9A86C; border-radius: 10px; }
+  </style>
+</head>
+<body class="min-h-screen bg-bgLight">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Main App Component
+    function App() {
+      const [activeTab, setActiveTab] = useState('home');
+      const [tasbeehCount, setTasbeehCount] = useState(0);
+      const [tasbeehTarget, setTasbeehTarget] = useState(33);
+      const [selectedZikr, setSelectedZikr] = useState('سُبْحَانَ اللَّهِ');
+
+      const zikrOptions = [
+        'سُبْحَانَ اللَّهِ',
+        'الْحَمْدُ لِلَّهِ',
+        'اللَّهُ أَكْبَرُ',
+        'لَا إِلٰهَ إِلَّا اللَّهُ',
+        'أَسْتَغْفِرُ اللَّهَ'
+      ];
+
+      const surahs = [
+        { id: 1, name: "الفاتحة", titleUrdu: "سورۃ الفاتحہ", verses: 7, type: "مکی" },
+        { id: 36, name: "يس", titleUrdu: "سورۃ يس", verses: 83, type: "مکی" },
+        { id: 55, name: "الرحمن", titleUrdu: "سورۃ الرحمن", verses: 78, type: "مدنی" },
+        { id: 67, name: "الملك", titleUrdu: "سورۃ الملک", verses: 30, type: "مکی" },
+        { id: 112, name: "الإخلاص", titleUrdu: "سورۃ الاخلاص", verses: 4, type: "مکی" },
+        { id: 113, name: "الفلق", titleUrdu: "سورۃ الفلق", verses: 5, type: "مکی" },
+        { id: 114, name: "الناس", titleUrdu: "سورۃ الناس", verses: 6, type: "مکی" }
+      ];
+
+      const duas = [
+        { title: "صبح و شام کی دعا", arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ", urdu: "ہم نے صبح کی اور اللہ کے تمام ملک نے صبح کی۔" },
+        { title: "کھانا کھانے کے بعد کی دعا", arabic: "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مُسْلِمِينَ", urdu: "تمام تعریفیں اللہ کے لیے ہیں جس نے ہمیں کھلایا، پلایا اور مسلمان بنایا۔" },
+        { title: "سفر کی دعا", arabic: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَٰذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ", urdu: "پاک ہے وہ ذات جس نے اس کو ہمارے بس میں کر دیا اور ہم اس کو قابو میں لانے والے نہ تھے۔" }
+      ];
+
+      const incrementTasbeeh = () => {
+        if (tasbeehCount + 1 >= tasbeehTarget) {
+          if (navigator.vibrate) navigator.vibrate(200);
+        }
+        setTasbeehCount(prev => prev + 1);
+      };
+
+      const resetTasbeeh = () => setTasbeehCount(0);
+
+      return (
+        <div class="max-w-md mx-auto min-h-screen bg-white shadow-2xl flex flex-col relative pb-20">
+          
+          <!-- Top Header -->
+          <header class="bg-primary text-white p-6 rounded-b-[32px] shadow-lg text-center relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-accent/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-accent/20 rounded-full blur-2xl"></div>
+            
+            <span class="text-accent text-sm font-semibold tracking-widest uppercase block mb-1">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</span>
+            <h1 class="text-2xl font-bold font-urdu text-accentLight">اسلامی پورٹل</h1>
+            <p class="text-xs text-emerald-100 mt-1 opacity-90">قرآن پاک، تسبیح اور مسنون دعائیں</p>
+          </header>
+
+          <!-- Navigation Tabs -->
+          <div class="flex justify-around bg-emerald-50/80 p-2 my-4 mx-4 rounded-2xl border border-primary/10">
+            <button 
+              onClick={() => setActiveTab('home')} 
+              class={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'home' ? 'bg-primary text-white shadow-md' : 'text-primary'}`}>
+              ہوم
+            </button>
+            <button 
+              onClick={() => setActiveTab('quran')} 
+              class={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'quran' ? 'bg-primary text-white shadow-md' : 'text-primary'}`}>
+              قرآن پاک
+            </button>
+            <button 
+              onClick={() => setActiveTab('tasbeeh')} 
+              class={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'tasbeeh' ? 'bg-primary text-white shadow-md' : 'text-primary'}`}>
+              تسبیح
+            </button>
+            <button 
+              onClick={() => setActiveTab('duas')} 
+              class={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'duas' ? 'bg-primary text-white shadow-md' : 'text-primary'}`}>
+              دعائیں
+            </button>
+          </div>
+
+          <!-- Main Content Body -->
+          <main class="flex-1 px-4">
+            
+            {/* HOME TAB */}
+            {activeTab === 'home' && (
+              <div class="space-y-4">
+                {/* Today's Ayah Card */}
+                <div class="bg-gradient-to-br from-primary to-primaryDark text-white p-5 rounded-2xl shadow-md border border-accent/30 text-center">
+                  <span class="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full font-bold">آج کی آیت</span>
+                  <p class="font-arabic text-2xl my-3 text-accentLight leading-loose">فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ</p>
+                  <p class="font-urdu text-sm text-emerald-100">"پس تم مجھے یاد کرو، میں تمہیں یاد رکھوں گا اور میرا شکر ادا کرو اور ناشکری نہ کرو۔"</p>
+                  <span class="text-[10px] text-accent block mt-2">سورۃ البقرہ: 152</span>
+                </div>
+
+                {/* Quick Access Grid */}
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                  <div onClick={() => setActiveTab('tasbeeh')} class="bg-bgLight p-4 rounded-2xl border border-primary/10 text-center cursor-pointer hover:bg-emerald-50 transition">
+                    <div class="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-2 text-xl">📿</div>
+                    <h3 class="font-bold text-sm text-primary">ڈیجیٹل تسبیح</h3>
+                    <p class="text-xs text-gray-500 mt-1">اذکار شمار کریں</p>
+                  </div>
+                  <div onClick={() => setActiveTab('quran')} class="bg-bgLight p-4 rounded-2xl border border-primary/10 text-center cursor-pointer hover:bg-emerald-50 transition">
+                    <div class="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-2 text-xl">📖</div>
+                    <h3 class="font-bold text-sm text-primary">سورۃ النبوی</h3>
+                    <p class="text-xs text-gray-500 mt-1">تلاوت و ترجمہ</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* QURAN TAB */}
+            {activeTab === 'quran' && (
+              <div class="space-y-3">
+                <h2 class="text-lg font-bold text-primary font-urdu mb-2">مبارک سورتیں</h2>
+                {surahs.map((surah) => (
+                  <div key={surah.id} class="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm flex justify-between items-center hover:border-accent transition">
+                    <div>
+                      <h3 class="font-bold text-primary font-urdu text-base">{surah.titleUrdu}</h3>
+                      <p class="text-xs text-gray-500">{surah.type} • {surah.verses} آیات</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-arabic text-2xl text-accent font-bold block">{surah.name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* TASBEEH TAB */}
+            {activeTab === 'tasbeeh' && (
+              <div class="text-center py-4 space-y-6">
+                <!-- Zikr Selection -->
+                <div>
+                  <label class="text-xs text-gray-500 font-bold block mb-2">ذکر منتخب کریں:</label>
+                  <select 
+                    value={selectedZikr} 
+                    onChange={(e) => setSelectedZikr(e.target.value)}
+                    class="bg-bgLight border border-primary/20 text-primary text-lg font-arabic font-bold rounded-xl px-4 py-2 w-full text-center outline-none">
+                    {zikrOptions.map((z, idx) => <option key={idx} value={z}>{z}</option>)}
+                  </select>
+                </div>
+
+                <!-- Display Counter Circle -->
+                <div class="relative w-48 h-48 mx-auto flex flex-col items-center justify-center rounded-full bg-gradient-to-br from-primary to-primaryDark text-white shadow-2xl border-4 border-accent">
+                  <span class="font-arabic text-2xl text-accentLight mb-1">{selectedZikr}</span>
+                  <span class="text-5xl font-bold font-sans">{tasbeehCount}</span>
+                  <span class="text-xs text-emerald-200 mt-1">ٹارگٹ: {tasbeehTarget}</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-4">
+                  <button 
+                    onClick={incrementTasbeeh} 
+                    class="bg-primary active:bg-primaryDark text-white font-bold text-xl px-10 py-4 rounded-2xl shadow-lg transform active:scale-95 transition">
+                    گنت کریں (+1)
+                  </button>
+                  <button 
+                    onClick={resetTasbeeh} 
+                    class="bg-gray-100 text-gray-600 font-bold px-4 py-4 rounded-2xl border border-gray-300 active:bg-gray-200">
+                    ریسیٹ
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* DUAS TAB */}
+            {activeTab === 'duas' && (
+              <div class="space-y-4">
+                <h2 class="text-lg font-bold text-primary font-urdu mb-2">روزمرہ کی مسنون دعائیں</h2>
+                {duas.map((dua, index) => (
+                  <div key={index} class="bg-bgLight p-4 rounded-2xl border border-primary/10 shadow-sm space-y-2">
+                    <span class="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-lg inline-block">{dua.title}</span>
+                    <p class="font-arabic text-xl text-primary font-bold text-right leading-loose">{dua.arabic}</p>
+                    <p class="font-urdu text-sm text-gray-700 text-right">{dua.urdu}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </main>
+
+          <!-- Footer Bar -->
+          <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-100 p-3 text-center text-xs text-gray-400">
+            طالبِ دعا • Islamic Web Portal 2026
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
